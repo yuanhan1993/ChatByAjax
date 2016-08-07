@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>test.html</title>
+	
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="this is my page">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+    <!--<link rel="stylesheet" type="text/css" href="./styles.css">-->
+
+  </head>
+  <script type="text/javascript" src="./js/jquery.js"></script>
+  <script type="text/javascript">
+    $(function(){
+    	  $("#showTest").click(function(){
+    		  //发送ajax
+    		  $.ajax({
+    			  url:"http://localhost:8080/ChatByAjax/test.do",
+    			  type:"post",
+    			  dataType:"json",
+    			  success:function(result){
+    				//清除原有的note_list列表
+    				  $("#note_list").empty();
+    				  for(var i=0;i<result.length;i++){
+    					  var id=result[i].id;
+    					  var name=result[i].name;
+    					  var s_li="<li>"+name+"</li>";
+    					  var $li=$(s_li);
+    					  $li.data("noteId",id);
+    					  $("#note_list").append($li);
+    				  }
+    			  }
+    		  });
+    	  });
+      });
+  </script>
+  <body>
+    This is my HTML page. <br>
+    <button id="showTest">显示信息</button>
+   <ul id="note_list">
+      
+    </ul>
+  </body>
+</html>

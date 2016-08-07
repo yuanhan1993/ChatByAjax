@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>主页面</title>
+	
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="this is my page">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+    <!--<link rel="stylesheet" type="text/css" href="./styles.css">-->
+ <style type="text/css">
+ .main{
+  width:60%;
+  height:400px;
+  border:1px solid red;
+  position: absolute;
+ }
+ #inputs{
+  position:absolute;
+  bottom:10px;
+  left:10px;
+ }
+ #inputmsg{
+ width:600px;
+ height:30px;
+ }
+ #send{
+ height:30px;
+ }
+ .messages{
+ height:300px;
+ padding:10px;
+ overflow: auto; 
+ }
+  .right{
+ text-align:right;
+ }
+ /*去掉圆点和空格*/
+ .list{
+  list-style:none;
+  margin:0px;
+  padding-left:0px;
+ }
+ .list li{
+ margin-top:10px;
+ }
+ .msg{
+   border:1px solid #adfedc;
+   background-color:#00CACA;
+    border-radius:5px;
+    padding:2px;
+    color:#fff;
+ }
+ .users{
+  border:1px solid #ccc;
+  position:absolute;
+  right:50px;
+  width:100px;
+ }
+ .userList{
+ list-style:none;
+  margin:0px;
+  padding-left:0px;
+ }
+ .userList li{
+  margin-top:20px;
+ }
+ a{
+  text-decoration:none;
+ }
+ </style>
+ <script type="text/javascript" src="./js/jquery.js"></script>
+ <script type="text/javascript" src="./js/cookie_util.js"></script>
+ <script type="text/javascript">
+   $(function(){
+   var fromUserId=getCookie("uid");
+   getNickName(fromUserId);
+   // showMessages(1);
+    showUserList();
+   
+    //动态绑定
+    $('.userList').delegate('li','click',function(){
+    var userId=$(this).data("userId");
+    addCookie("toUserId",userId);
+    var toUserId=getCookie("toUserId");
+    showMessages(toUserId);
+});
+//轮询
+ajaxPolling();
+   });
+   function ajaxPolling(){
+   setInterval(showNewMessages, 2000); //循环执行！！
+   }
+   function showMessages(toUserId){
+    var fromUId=getCookie("uid");
+    $.ajax({
+    			  url:"http://localhost:8080/ChatByAjax/showMsg.do",
+    			  type:"post",
+    			  dataType:"json",
+    			  data:{"fromUserId":fromUId,"toUserId":toUserId},
+    			  success:function(result){
+    				//清除原有的note_list列表
+    				  $(".list").empty();
+    				  for(var i=0;i<result.length;i++){
+    					  var fromUserId=result[i].fromUserId;
+    					  var toUserId=result[i].toUserId;
+    					  var message=result[i].message;
+    					  var nickname=result[i].nickname;
+    					   var s_li="";
+    					  if(fromUserId==fromUId){
+    					   s_li='<li class="right">'+
+    					   '<span class="msg">'+message+'</span>：'+nickname+'</li>';
+    					  }else{
+    					  s_li='<li>'+
+    					   nickname+':<span class="msg">'+message+'</span></li>';
+    					  }
+    					  var $li=$(s_li);
+    					  $(".list").append($li);
+    				  }
+    			  }
+    		  });
+   }
+   function showNewMessages(){
+   var fromUserId=getCookie("uid");
+   var toUserId=getCookie("toUserId");
+    $.ajax({
+    			  url:"http://localhost:8080/ChatByAjax/showNewMsg.do",
+    			  type:"post",
+    			  dataType:"json",
+    			  data:{"fromUserId":fromUserId,"toUserId":toUserId},
+    			  success:function(result){
+    				  for(var i=0;i<result.length;i++){
+    					  var fromUserId=result[i].fromUserId;
+    					  var toUserId=result[i].toUserId;
+    					  var message=result[i].message;
+    					  var nickname=result[i].nickname;
+    					   var s_li="";
+    					 
+    					 s_li='<li>'+
+    					   nickname+':<span class="msg">'+message+'</span></li>';
+    					
+    					  var $li=$(s_li);
+    					  $(".list").append($li);
+    				  }
+    			  }
+    		  });
+   }
+   
+   function sendMessages(){
+   
+   var toUserId=getCookie("toUserId");
+   var fromUserId=getCookie("uid");
+   var nickname=getCookie("nickname")
+   var message=$("#inputmsg").val();
+   if(message==""||message==null){
+     alert("输入内容不能为空！");
+   }else{
+   $("#inputmsg").val("");
+    $.ajax({
+    			  url:"http://localhost:8080/ChatByAjax/sendMsg.do",
+    			  type:"post",
+    			  dataType:"json",
+    			  data:{"fromUserId":fromUserId,"toUserId":toUserId,"message":message},
+    			  success:function(result){
+    			  if(result==0){
+    			    alert("发送失败！！！");
+    			  }else{
+    			    $("#inputmsg").empty();
+    			    s_li='<li class="right">'+
+    					   '<span class="msg">'+message+'</span>：'+nickname+'</li>';
+    				var $li=$(s_li);
+    				$(".list").append($li);
+    			  }
+    					 
+    			  }
+    		  });
+    		  }
+   }
+   function getNickName(fromUserId){
+     $.ajax({
+    			  url:"http://localhost:8080/ChatByAjax/showUserById.do",
+    			  type:"post",
+    			  dataType:"json",
+    			  data:{"fromUserId":fromUserId},
+    			  success:function(result){
+    			  if(result==""){
+    			    alert("失败！");
+    			  }else{
+    			    addCookie("nickname",result.nickname);
+    			  }
+    					 
+    			  }
+    		  });
+    		 
+   }
+   function showUserList(){
+     var fromUserId=getCookie("uid");
+    $.ajax({
+    			  url:"http://localhost:8080/ChatByAjax/showUsers.do",
+    			  type:"post",
+    			  dataType:"json",
+    			  data:{"fromUserId":fromUserId},
+    			  success:function(result){
+    				//清除原有的note_list列表
+    				  $(".userList").empty();
+    				  for(var i=0;i<result.length;i++){
+    					  var userId=result[i].uid;
+    					  var nickName=result[i].nickname;
+    					  var s_li='<li><a href="JavaScript:void(0);">'+nickName+'</a></li>'
+    					  
+    					  var $li=$(s_li);
+    					  //将id的值设置在li中，方便取用
+    					  $li.data("userId",userId);
+    					  $(".userList").append($li);
+    				  }
+    			  }
+    		  });
+   }
+ </script>
+  </head>
+  
+  <body>
+   <div class="main">
+   <h3 style="margin:0 auto; text-align:center; border-bottom:1px solid #ccc">阿狸旺旺疯狂聊天</h3>
+   <div class="messages">
+      <ul class="list">
+      <!-- 
+        <li>你：<span class="msg">呵呵哒</span></li>
+        <li class="right"><span class="msg">打死</span>：我</li>
+         -->
+      </ul>
+   </div>
+     <p id="inputs">
+     <input type="text" id="inputmsg" placeholder="请输入内容">
+     <input type="button" id="send" value="发  送" onclick="sendMessages()">
+     </p>
+   </div>
+   <div class="users">
+    <h3>用户列表</h3>
+    <hr>
+     <ul class="userList">
+        
+     </ul>
+   </div>
+  </body>
+</html>

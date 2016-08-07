@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="messagesql">
+	
+	<select id="showMessages" parameterType="com.just.chat.entity.Messages"
+		resultType="com.just.chat.entity.Chat">
+		select m.mid,m.fromUserId,m.toUserId,m.Message,m.MessageTime,m.MessageState,c.nickname
+		from messages m,cuser c
+		where 
+		m.fromUserId=#{fromUserId} and m.toUserId=#{toUserId} and c.uid=#{fromUserId}
+		or m.fromUserId=#{toUserId} and m.toUserId=#{fromUserId} and c.uid=#{toUserId}
+	</select>
+	
+	<select id="showNewMessages" parameterType="com.just.chat.entity.Messages" 
+	resultType="com.just.chat.entity.Chat">
+	 select m.mid,m.fromUserId,m.toUserId,m.Message,m.MessageTime,m.MessageState,c.nickname
+		from messages m,cuser c
+		where 
+		m.fromUserId=#{toUserId} and m.toUserId=#{fromUserId} 
+		and m.messageState=0 and c.uid=#{toUserId}
+	</select>
+	
+	<insert id="insertMessage" parameterType="com.just.chat.entity.Messages">
+	 insert into messages
+	 (fromUserId,toUserId,message,messageTime,messageState)
+	 values(#{fromUserId},#{toUserId},#{message},#{messageTime},#{messageState})
+	</insert>
+	
+	<update id="upMessageState" parameterType="com.just.chat.entity.Messages">
+	update messages
+	set messageState=1
+	where fromUserId=#{toUserId} and toUserId=#{fromUserId} 
+	</update>
+	
+</mapper>
